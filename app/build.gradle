@@ -14,11 +14,21 @@ android {
         versionName '2.0'
     }
 
+    // Clé de signature fixe (dans le dépôt) : chaque nouvelle version s'installe
+    // par-dessus la précédente sans perdre l'appairage ni la liste des blocages.
+    signingConfigs {
+        coupenet {
+            storeFile file('coupenet.keystore')
+            storePassword 'coupenet'
+            keyAlias 'coupenet'
+            keyPassword 'coupenet'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
-            // Signé avec la clé debug pour pouvoir l'installer directement.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.coupenet
         }
     }
 

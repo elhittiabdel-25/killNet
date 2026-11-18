@@ -105,6 +105,7 @@ public class FirewallService extends Service {
         if (searching) { showWaitingForService(); return; }
         searching = true;
         tasks++;
+        Log.d("recherche du service d'appairage (mDNS)");
         pairingPort = -1;
         showWaitingForService();
         report(getString(R.string.pair_searching), false, false);
@@ -113,6 +114,7 @@ public class FirewallService extends Service {
             while (searching && System.currentTimeMillis() < end) {
                 int p = AdbMdns.findPort(this, AdbMdns.TYPE_PAIRING, 15_000);
                 if (p > 0 && p != pairingPort) {
+                    Log.d("service d'appairage trouvé, port " + p);
                     pairingPort = p;
                     ui.post(this::showCodeInput);
                     report(getString(R.string.pair_found), false, false);
@@ -132,6 +134,7 @@ public class FirewallService extends Service {
             showCodeInput();
             return;
         }
+        Log.d("code reçu (" + code.trim().length() + " caractères), port " + pairingPort);
         if (pairingPort <= 0) {
             notifyPairing(getString(R.string.pair_no_port), true);
             report(getString(R.string.pair_no_port), false, false);
@@ -155,8 +158,10 @@ public class FirewallService extends Service {
                 if (searchThread != null) searchThread.interrupt();
                 Firewall.applyAll(this);
             } catch (PairingClient.WrongCodeException e) {
+                Log.d("code refusé");
                 msg = getString(R.string.pair_wrong_code);
             } catch (Exception e) {
+                Log.e("appairage", e);
                 msg = getString(R.string.pair_failed, e.getMessage() != null ? e.getMessage() : e.toString());
             }
             final String m = msg;
