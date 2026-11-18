@@ -87,6 +87,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.init(this);
 
         modeVpn = findViewById(R.id.mode_vpn);
         modeSystem = findViewById(R.id.mode_system);
@@ -192,6 +193,8 @@ public class MainActivity extends Activity {
             if (v && !otherVpnActive()) askVpnPermissionIfNeeded();
         } else if (id == R.id.menu_repair) {
             startPairing();
+        } else if (id == R.id.menu_log) {
+            showLog();
         } else if (id == R.id.menu_help) {
             showText(R.string.menu_help, getString(R.string.help_text));
         } else {
@@ -643,6 +646,32 @@ public class MainActivity extends Activity {
                 .setTitle(R.string.error_title)
                 .setMessage(getString(R.string.error_body, details))
                 .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private void showLog() {
+        String text = Log.read();
+        final String full = "Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + "), "
+                + Build.MANUFACTURER + " " + Build.MODEL + "\n" + (text.isEmpty() ? "(vide)" : text);
+        TextView tv = new TextView(this);
+        tv.setText(full);
+        tv.setTextIsSelectable(true);
+        tv.setTextSize(11);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        tv.setPadding(pad, pad, pad, pad);
+        android.widget.ScrollView sv = new android.widget.ScrollView(this);
+        sv.addView(tv);
+        sv.post(() -> sv.fullScroll(View.FOCUS_DOWN));
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.menu_log)
+                .setView(sv)
+                .setPositiveButton(R.string.btn_copy, (d, w) -> {
+                    android.content.ClipboardManager cm = getSystemService(android.content.ClipboardManager.class);
+                    cm.setPrimaryClip(android.content.ClipData.newPlainText("Coupe-Net", full));
+                    toast(getString(R.string.toast_copied));
+                })
+                .setNeutralButton(R.string.btn_clear, (d, w) -> Log.clear())
+                .setNegativeButton(android.R.string.ok, null)
                 .show();
     }
 

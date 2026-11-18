@@ -101,12 +101,14 @@ public final class AdbClient implements Closeable {
      * en cochant « Toujours autoriser »).
      */
     private Msg authenticate(Context ctx, AdbKey key, Msg m) throws Exception {
+        com.coupenet.Log.d("adbd demande une authentification RSA");
         if (m.arg0 != AUTH_TOKEN) throw new IOException("Authentification adb inattendue");
         send(A_AUTH, AUTH_SIGNATURE, 0, key.signAdbToken(m.data));
         Msg r = read();
-        if (r.cmd == A_CNXN) return r;
+        if (r.cmd == A_CNXN) { com.coupenet.Log.d("clé déjà autorisée"); return r; }
         if (r.cmd != A_AUTH) throw new IOException("Réponse adb inattendue");
         // Clé inconnue : demande d'autorisation à l'écran.
+        com.coupenet.Log.d("clé inconnue : envoi de la clé publique (fenêtre « Autoriser le débogage ? »)");
         com.coupenet.Notifications.authPrompt(ctx);
         send(A_AUTH, AUTH_RSAPUBLICKEY, 0,
                 (key.adbPublicKey("coupenet@android") + "\u0000").getBytes(StandardCharsets.UTF_8));

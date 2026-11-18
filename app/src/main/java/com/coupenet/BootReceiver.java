@@ -14,6 +14,8 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Context app = context.getApplicationContext();
+        Log.init(app);
+        Log.d("démarrage du téléphone / mise à jour");
         if (Store.blocked(app).isEmpty()) return;
         if (Store.systemMode(app)) {
             FirewallService.restore(app);

@@ -73,6 +73,7 @@ public class FirewallService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.init(this);
         String action = intent != null ? intent.getAction() : null;
         startForegroundCompat(baseNotification(getString(R.string.notif_working)).build());
         if (ACTION_PAIR_START.equals(action)) {

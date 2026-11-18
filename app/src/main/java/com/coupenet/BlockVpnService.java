@@ -75,6 +75,7 @@ public class BlockVpnService extends VpnService {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.init(this);
         String action = intent != null ? intent.getAction() : ACTION_START;
         startForegroundCompat();
         if (ACTION_STOP.equals(action)) {

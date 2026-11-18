@@ -73,6 +73,10 @@
     <string name="menu_fallback">VPN de secours si le pare-feu ne peut pas être remis</string>
     <string name="menu_repair">Refaire l\'appairage</string>
     <string name="menu_help">Aide</string>
+    <string name="menu_log">Journal (diagnostic)</string>
+    <string name="btn_copy">Copier</string>
+    <string name="btn_clear">Effacer</string>
+    <string name="toast_copied">Journal copié : collez-le dans la conversation.</string>
     <string name="confirm_unblock_all">Rendre internet à toutes les applications bloquées ?</string>
 
     <!-- Messages -->
