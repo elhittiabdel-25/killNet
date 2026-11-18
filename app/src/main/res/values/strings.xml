@@ -12,6 +12,11 @@
     <string name="status_vpn_permission">⚠️ Android doit autoriser le VPN de blocage (aucune donnée ne sort du téléphone).</string>
     <string name="status_vpn_on">✅ Internet coupé pour %1$d application(s), en Wi-Fi comme en 4G/5G.\nAstuce : activez « VPN permanent » pour qu\'il ne s\'arrête jamais.</string>
     <string name="status_vpn_off">❌ Le VPN de blocage est arrêté (un autre VPN a peut-être pris sa place).</string>
+    <string name="status_vpn_conflict">❌ Un autre VPN (Proton VPN…) est actif. Le mode simple ne peut pas tourner en même temps : Android n\'autorise qu\'un seul VPN.\n\nUtilisez le mode pare-feu système, qui coupe les applications tout en gardant Proton VPN connecté.</string>
+    <string name="btn_switch_system">Passer au mode pare-feu système</string>
+    <string name="btn_replace_vpn">Couper mon VPN quand même</string>
+    <string name="vpn_conflict_title">Votre VPN serait déconnecté</string>
+    <string name="vpn_conflict_text">Un autre VPN (Proton VPN…) est connecté. Android n\'autorise qu\'un seul VPN à la fois : le mode simple le déconnecterait.\n\nLe mode pare-feu système bloque les applications sans toucher à votre VPN (appairage unique avec le Débogage sans fil, en Wi-Fi).</string>
     <string name="btn_allow_vpn">Autoriser le VPN de blocage</string>
     <string name="btn_start_vpn">Démarrer le blocage</string>
     <string name="btn_always_on">Rendre permanent (paramètres VPN)</string>

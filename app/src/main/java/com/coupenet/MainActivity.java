@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
@@ -185,7 +188,7 @@ public class MainActivity extends Activity {
             boolean v = !item.isChecked();
             item.setChecked(v);
             Store.setVpnFallback(this, v);
-            if (v) askVpnPermissionIfNeeded();
+            if (v && !otherVpnActive()) askVpnPermissionIfNeeded();
         } else if (id == R.id.menu_repair) {
             startPairing();
         } else if (id == R.id.menu_help) {
@@ -242,6 +245,9 @@ public class MainActivity extends Activity {
         boolean needPermission = VpnService.prepare(this) != null;
         if (blocked.isEmpty()) {
             setStatus(getString(R.string.status_vpn_empty), GREY);
+        } else if (!BlockVpnService.isRunning() && otherVpnActive()) {
+            setStatus(getString(R.string.status_vpn_conflict), RED);
+            showButton(btn1, R.string.btn_switch_system, v -> modeSystem.setChecked(true));
         } else if (needPermission) {
             setStatus(getString(R.string.status_vpn_permission), YELLOW);
             showButton(btn1, R.string.btn_allow_vpn, v -> askVpnPermissionIfNeeded());
@@ -402,10 +408,37 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Renvoie true si une demande d'autorisation VPN a été affichée. */
+    /** Un autre VPN (Proton, etc.) est-il connecté en ce moment ? */
+    private boolean otherVpnActive() {
+        if (BlockVpnService.isRunning()) return false;
+        try {
+            ConnectivityManager cm = getSystemService(ConnectivityManager.class);
+            for (Network n : cm.getAllNetworks()) {
+                NetworkCapabilities nc = cm.getNetworkCapabilities(n);
+                if (nc != null && nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /** Renvoie true si une demande d'autorisation VPN (ou un avertissement) a été affichée. */
     private boolean askVpnPermissionIfNeeded() {
         Intent i = VpnService.prepare(this);
         if (i == null) return false;
+        if (otherVpnActive()) {
+            // Ne jamais couper le VPN de l'utilisateur sans prévenir.
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.vpn_conflict_title)
+                    .setMessage(R.string.vpn_conflict_text)
+                    .setPositiveButton(R.string.btn_switch_system, (d, w) -> modeSystem.setChecked(true))
+                    .setNegativeButton(android.R.string.cancel, (d, w) -> refreshStatus())
+                    .setNeutralButton(R.string.btn_replace_vpn, (d, w) -> {
+                        try { startActivityForResult(i, REQ_VPN); } catch (Exception ignored) {}
+                    })
+                    .show();
+            return true;
+        }
         try {
             startActivityForResult(i, REQ_VPN);
             return true;

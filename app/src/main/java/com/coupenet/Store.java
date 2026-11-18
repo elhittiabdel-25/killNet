@@ -43,7 +43,10 @@ public final class Store {
     public static boolean showSystem(Context c) { return prefs(c).getBoolean(KEY_SHOW_SYSTEM, false); }
     public static void setShowSystem(Context c, boolean v) { prefs(c).edit().putBoolean(KEY_SHOW_SYSTEM, v).apply(); }
 
-    public static String mode(Context c) { return prefs(c).getString(KEY_MODE, MODE_VPN); }
+    public static String mode(Context c) {
+        // Par défaut : pare-feu système (compatible avec un VPN comme Proton) quand Android le permet.
+        return prefs(c).getString(KEY_MODE, android.os.Build.VERSION.SDK_INT >= 30 ? MODE_SYSTEM : MODE_VPN);
+    }
     public static void setMode(Context c, String m) { prefs(c).edit().putString(KEY_MODE, m).commit(); }
     public static boolean systemMode(Context c) { return MODE_SYSTEM.equals(mode(c)); }
 
