@@ -1,27 +1,27 @@
 package com.coupenet;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
+
+import com.coupenet.adb.AdbClient;
+import com.coupenet.adb.AdbManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import rikka.shizuku.Shizuku;
-
 /**
- * Coupe l'accès réseau d'une application au niveau du noyau, en utilisant la
- * chaîne de pare-feu "chain3" du service de connectivité d'Android.
- * Le blocage s'applique à l'UID de l'application, donc sur TOUS les réseaux :
- * Wi-Fi, 4G/5G, partage de connexion, et même quand un VPN est actif.
+ * Mode « pare-feu système » : coupe l'accès réseau d'une application au niveau du
+ * noyau via la chaîne de pare-feu « chain3 » du service de connectivité d'Android.
+ * Le blocage vise l'UID de l'application, donc TOUS les réseaux : Wi-Fi, 4G/5G,
+ * partage de connexion, et même quand un VPN est actif.
  *
- * Les commandes sont exécutées avec les droits "shell" via Shizuku, ou via root.
+ * Les commandes sont lancées avec les droits « shell » via l'ADB intégré
+ * (Débogage sans fil, sans Shizuku), ou via root si le téléphone est rooté.
  */
 public final class Firewall {
 
-    public enum Backend { SHIZUKU, ROOT, NONE }
+    public enum Backend { ROOT, ADB, NONE }
 
     public static final class Result {
         public final boolean ok;
@@ -33,25 +33,6 @@ public final class Firewall {
     private static volatile Boolean rootCache = null;
 
     private Firewall() {}
-
-    // ---------- Détection du moteur disponible ----------
-
-    public static boolean shizukuRunning() {
-        try {
-            return Shizuku.pingBinder() && !Shizuku.isPreV11();
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    public static boolean shizukuReady() {
-        try {
-            return shizukuRunning()
-                    && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED;
-        } catch (Throwable t) {
-            return false;
-        }
-    }
 
     /** Ne pas appeler sur le thread principal (peut déclencher une demande Magisk). */
     public static boolean rootAvailable() {
@@ -69,28 +50,28 @@ public final class Firewall {
     }
 
     /** Ne pas appeler sur le thread principal. */
-    public static Backend backend() {
-        if (shizukuReady()) return Backend.SHIZUKU;
+    public static Backend backend(Context ctx) {
         if (rootAvailable()) return Backend.ROOT;
+        if (Store.adbPaired(ctx) && AdbManager.supported()) return Backend.ADB;
         return Backend.NONE;
     }
 
     // ---------- Actions ----------
 
-    public static Result block(String pkg) {
+    public static Result block(Context ctx, String pkg) {
         if (!PKG.matcher(pkg).matches()) return new Result(false, "Nom de paquet invalide");
-        return run("cmd connectivity set-chain3-enabled true && "
+        return run(ctx, "cmd connectivity set-chain3-enabled true && "
                 + "cmd connectivity set-package-networking-enabled false " + pkg);
     }
 
-    public static Result unblock(String pkg, boolean lastOne) {
+    public static Result unblock(Context ctx, String pkg, boolean lastOne) {
         if (!PKG.matcher(pkg).matches()) return new Result(false, "Nom de paquet invalide");
         String cmd = "cmd connectivity set-package-networking-enabled true " + pkg;
         if (lastOne) cmd += " && cmd connectivity set-chain3-enabled false";
-        return run(cmd);
+        return run(ctx, cmd);
     }
 
-    /** Réapplique toutes les règles enregistrées (elles sont effacées par Android au redémarrage). */
+    /** Réapplique toutes les règles enregistrées (Android les efface au redémarrage). */
     public static Result applyAll(Context ctx) {
         Set<String> blocked = Store.blocked(ctx);
         if (blocked.isEmpty()) return new Result(true, "");
@@ -100,7 +81,7 @@ public final class Firewall {
                 sb.append(" && cmd connectivity set-package-networking-enabled false ").append(pkg);
             }
         }
-        return run(sb.toString());
+        return run(ctx, sb.toString());
     }
 
     public static Result unblockAll(Context ctx) {
@@ -112,40 +93,40 @@ public final class Firewall {
             }
         }
         sb.append("cmd connectivity set-chain3-enabled false");
-        return run(sb.toString());
+        return run(ctx, sb.toString());
     }
 
     // ---------- Exécution ----------
 
-    private static Result run(String cmd) {
-        Backend b = backend();
+    private static Result run(Context ctx, String cmd) {
+        Backend b = backend(ctx);
         try {
-            Process p;
-            if (b == Backend.SHIZUKU) {
-                p = shizukuProcess(new String[]{"sh", "-c", cmd + " 2>&1"});
-            } else if (b == Backend.ROOT) {
-                p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd + " 2>&1"});
+            String out;
+            int code;
+            if (b == Backend.ROOT) {
+                Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd + " 2>&1"});
+                out = readAll(p.getInputStream()).trim();
+                code = p.waitFor();
+            } else if (b == Backend.ADB) {
+                AdbClient.Result r = AdbManager.exec(ctx, cmd);
+                out = r.output;
+                code = r.code;
             } else {
-                return new Result(false, "Shizuku n'est pas actif (ni root disponible).");
+                return new Result(false, ctx.getString(R.string.err_no_backend));
             }
-            String out = readAll(p.getInputStream()).trim();
-            int code = p.waitFor();
+            String low = out.toLowerCase();
             boolean ok = code == 0
-                    && !out.toLowerCase().contains("unknown command")
-                    && !out.toLowerCase().contains("exception")
-                    && !out.toLowerCase().contains("error");
+                    && !low.contains("unknown command")
+                    && !low.contains("exception")
+                    && !low.contains("error");
+            if (!ok && (low.contains("unknown command") || low.contains("unknown option"))) {
+                out = ctx.getString(R.string.err_unsupported) + "\n\n" + out;
+            }
             return new Result(ok, out.isEmpty() ? ("code " + code) : out);
         } catch (Throwable t) {
-            return new Result(false, t.toString());
+            String m = t.getMessage();
+            return new Result(false, m != null ? m : t.toString());
         }
-    }
-
-    /** Shizuku.newProcess est privé dans l'API 13 : on y accède par réflexion. */
-    private static Process shizukuProcess(String[] cmd) throws Exception {
-        Method m = Shizuku.class.getDeclaredMethod(
-                "newProcess", String[].class, String[].class, String.class);
-        m.setAccessible(true);
-        return (Process) m.invoke(null, cmd, null, null);
     }
 
     private static String readAll(InputStream in) throws Exception {

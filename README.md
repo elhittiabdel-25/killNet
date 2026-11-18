@@ -1,34 +1,43 @@
 # Coupe-Net
 
-Application Android qui coupe internet à des applications précises, que vous choisissez dans une liste.
+Application Android qui coupe internet à des applications précises, choisies dans une liste. **Sans Shizuku.**
 
-Le blocage passe par le pare-feu intégré d'Android (la « chain3 » du service de connectivité) : il agit sur l'application elle-même, donc il fonctionne **en Wi-Fi, en 4G/5G, en partage de connexion et même quand un VPN est actif**. Coupe-Net n'utilise pas de VPN, vous gardez donc votre VPN habituel.
+Deux modes, au choix en haut de l'écran :
 
-## Ce qu'il faut
+| | Mode simple (VPN local) | Mode pare-feu système |
+|---|---|---|
+| Configuration | Aucune (accepter l'autorisation VPN) | Appairage unique avec le « Débogage sans fil » |
+| Wi-Fi, 4G/5G | ✅ | ✅ |
+| En même temps que votre VPN | ❌ (Android : un seul VPN à la fois) | ✅ |
+| Android | 8+ | 11+ (pare-feu par app : en général Android 13+) |
 
-- Android 11 ou plus récent
-- L'application gratuite **Shizuku** (pas besoin de root ni d'ordinateur), ou un téléphone rooté
+### Mode simple (VPN local)
+Un VPN local qui ne reçoit **que** le trafic des applications bloquées et le jette. Les autres applications ne passent pas par lui. Aucune donnée ne quitte le téléphone. Astuce : Paramètres › VPN › ⚙ Coupe-Net › « VPN permanent » pour qu'il ne s'arrête jamais.
+
+### Mode pare-feu système (compatible VPN)
+Utilise le pare-feu intégré d'Android (`cmd connectivity set-package-networking-enabled`), qui coupe l'application elle-même : Wi-Fi, 4G/5G, partage de connexion **et** VPN actif.
+
+Pour avoir le droit d'utiliser ce pare-feu, Coupe-Net contient son **propre client ADB** : il s'appaire lui-même au « Débogage sans fil » d'Android, comme le ferait un ordinateur. Pas de Shizuku, pas d'ordinateur. (Avec un téléphone rooté, il utilise root directement.)
+
+Après l'appairage, Coupe-Net s'accorde la permission d'allumer le Débogage sans fil lui-même : il l'allume quelques secondes quand il doit changer une règle, puis le rééteint. **Après un redémarrage** (Android efface les règles), il remet les blocages tout seul dès que le téléphone est en Wi-Fi. Sans Wi-Fi, un VPN de secours garde les applications bloquées en attendant.
 
 ## Obtenir l'APK
+L'onglet **Actions** du dépôt GitHub compile l'APK à chaque envoi (« Construire l'APK », 3 à 5 min). Ouvrez la compilation terminée et téléchargez **Coupe-Net-apk** (zip contenant `Coupe-Net.apk`).
 
-### Option A : GitHub (sans rien installer)
-1. Créez un dépôt sur github.com (il peut être privé) et envoyez-y le contenu de ce dossier (bouton « Add file › Upload files », en gardant le dossier `.github`).
-2. Ouvrez l'onglet **Actions** : la compilation « Construire l'APK » démarre seule (3 à 5 minutes).
-3. Cliquez sur la compilation terminée et téléchargez **Coupe-Net-apk** en bas de la page. Le zip contient `Coupe-Net.apk`.
+Ou dans Android Studio : *Build › Build APK(s)*.
 
-### Option B : Android Studio
-Ouvrez le dossier dans Android Studio, puis faites *Build › Build APK(s)*.
+> Si une ancienne version de Coupe-Net est installée, désinstallez-la d'abord (signature différente).
 
-## Installation et configuration
-1. Installez `Coupe-Net.apk` (autorisez « Sources inconnues » si Android le demande).
-2. Installez Shizuku (Play Store ou https://shizuku.rikka.app).
-3. Activez les Options pour les développeurs (Paramètres › À propos › appuyez 7 fois sur « Numéro de build »), puis activez **Débogage sans fil**.
-4. Dans Shizuku : **Associer** (avec le code de débogage sans fil), puis **Démarrer**.
-5. Ouvrez Coupe-Net et appuyez sur **Autoriser Coupe-Net dans Shizuku**.
-6. Activez l'interrupteur à côté des applications auxquelles vous voulez couper internet.
+## Appairage (mode pare-feu système), une seule fois
+1. Le téléphone doit être en **Wi-Fi** (n'importe lequel, même le partage de connexion d'un autre téléphone).
+2. Activez les Options pour les développeurs : Paramètres › À propos › touchez 7 fois « Numéro de build ». Xiaomi/Redmi/POCO : activez aussi « Débogage USB (paramètres de sécurité) ».
+3. Dans Coupe-Net, choisissez « Mode pare-feu système » puis **Appairer**.
+4. Dans Options pour les développeurs › **Débogage sans fil** : activez-le, puis « Associer l'appareil avec un code d'association ».
+5. Une notification Coupe-Net apparaît : **Saisir le code**, tapez les 6 chiffres, validez (sans fermer la fenêtre des Paramètres).
+   Sinon : « Appairer en saisissant port et code ici », avec l'écran partagé.
+6. Activez l'interrupteur des applications à couper.
 
 ## Bon à savoir
-- **Redémarrage** : Android efface ces blocages à chaque redémarrage. Relancez Shizuku (bouton Démarrer) : Coupe-Net remet automatiquement vos blocages. Avec root, c'est fait au démarrage sans action de votre part.
-- Une application déjà ouverte peut garder en cache ce qu'elle a déjà chargé. Fermez-la et rouvrez-la pour voir l'effet.
-- Les notifications push qui passent par les services Google (Firebase) ne viennent pas de l'application elle-même : elles peuvent encore arriver.
-- Menu ⋮ : afficher les apps système, réappliquer les blocages, tout débloquer.
+- Une application déjà ouverte peut garder en mémoire ce qu'elle a déjà chargé : fermez-la et rouvrez-la.
+- Les notifications push qui passent par les services Google peuvent encore arriver.
+- Menu ⋮ : apps système, réappliquer, tout débloquer, options du Débogage sans fil, VPN de secours, refaire l'appairage.

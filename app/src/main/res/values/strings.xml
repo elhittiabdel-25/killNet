@@ -2,32 +2,104 @@
 <resources>
     <string name="app_name">Coupe-Net</string>
 
-    <string name="status_checking">Vérification de Shizuku…</string>
-    <string name="status_shizuku_ok">✅ Pare-feu prêt (Shizuku). Activez l\'interrupteur d\'une app pour lui couper internet.</string>
-    <string name="status_root_ok">✅ Pare-feu prêt (root). Activez l\'interrupteur d\'une app pour lui couper internet.</string>
-    <string name="status_need_permission">⚠️ Shizuku est lancé mais Coupe-Net n\'est pas encore autorisé.</string>
-    <string name="status_no_shizuku">❌ Shizuku n\'est pas démarré. Il est nécessaire pour couper internet sans root. Voir « Aide » dans le menu.</string>
-    <string name="btn_grant">Autoriser Coupe-Net dans Shizuku</string>
-    <string name="btn_open_shizuku">Ouvrir / installer Shizuku</string>
+    <string name="mode_vpn">Mode simple (VPN local) : rien à configurer</string>
+    <string name="mode_system">Mode pare-feu système : marche même avec votre VPN</string>
 
+    <string name="status_checking">Vérification…</string>
+
+    <!-- Mode VPN -->
+    <string name="status_vpn_empty">Activez l\'interrupteur d\'une application pour lui couper internet (Wi-Fi, 4G/5G…).\n\nCe mode utilise un VPN local : il ne peut pas tourner en même temps qu\'un autre VPN. Si vous utilisez un VPN, choisissez le mode pare-feu système.</string>
+    <string name="status_vpn_permission">⚠️ Android doit autoriser le VPN de blocage (aucune donnée ne sort du téléphone).</string>
+    <string name="status_vpn_on">✅ Internet coupé pour %1$d application(s), en Wi-Fi comme en 4G/5G.\nAstuce : activez « VPN permanent » pour qu\'il ne s\'arrête jamais.</string>
+    <string name="status_vpn_off">❌ Le VPN de blocage est arrêté (un autre VPN a peut-être pris sa place).</string>
+    <string name="btn_allow_vpn">Autoriser le VPN de blocage</string>
+    <string name="btn_start_vpn">Démarrer le blocage</string>
+    <string name="btn_always_on">Rendre permanent (paramètres VPN)</string>
+
+    <!-- Mode système -->
+    <string name="status_root_ok">✅ Pare-feu prêt (root). Marche en Wi-Fi, 4G/5G et avec un VPN actif.</string>
+    <string name="status_adb_ok">✅ Pare-feu prêt (ADB intégré). Marche en Wi-Fi, 4G/5G et avec un VPN actif.\nAprès un redémarrage, Coupe-Net remet les blocages tout seul dès que le Wi-Fi est connecté.</string>
+    <string name="status_adb_ok_manual">✅ Coupe-Net est appairé. Pour modifier les blocages, le Débogage sans fil doit être allumé (et le téléphone en Wi-Fi).</string>
+    <string name="status_old_android">❌ Ce mode demande Android 11 ou plus récent (ou un téléphone rooté). Utilisez le mode simple.</string>
+    <string name="status_need_pairing">⚠️ Étape unique : appairer Coupe-Net avec le « Débogage sans fil » d\'Android (pas besoin de Shizuku ni d\'ordinateur, il faut juste être en Wi-Fi).</string>
+    <string name="btn_pair">Appairer (code saisi dans la notification)</string>
+    <string name="btn_pair_manual">Appairer en saisissant port et code ici</string>
+    <string name="btn_pair_help">Comment faire ?</string>
+    <string name="btn_pair_go">Appairer</string>
+    <string name="btn_test">Réappliquer les blocages maintenant</string>
+    <string name="btn_open_wireless">Ouvrir les Options pour les développeurs</string>
+
+    <string name="pair_steps">1. Ouvrez les Options pour les développeurs › « Débogage sans fil » et activez-le.\n2. Touchez « Associer l\'appareil avec un code d\'association ».\n3. Une notification Coupe-Net apparaît : touchez « Saisir le code », tapez le code à 6 chiffres et validez, sans fermer la fenêtre des Paramètres.\n\nSi la notification n\'arrive pas, utilisez « Appairer en saisissant port et code ici » avec l\'écran partagé.</string>
+    <string name="pair_help_text">Pourquoi ? Android ne laisse pas une application ordinaire couper internet à une autre. Le « Débogage sans fil » donne à Coupe-Net, une fois appairé, les mêmes droits qu\'un ordinateur branché en ADB : il peut alors utiliser le pare-feu intégré d\'Android, qui agit sur l\'application elle-même (Wi-Fi, 4G/5G, VPN).\n\nActiver les Options pour les développeurs : Paramètres › À propos du téléphone › touchez 7 fois « Numéro de build » (sur Xiaomi : « Version MIUI/HyperOS »).\n\nXiaomi / Redmi / POCO : activez aussi « Débogage USB (paramètres de sécurité) » dans les Options pour les développeurs.\n\nLe téléphone doit être connecté à un Wi-Fi (n\'importe lequel, même un partage de connexion d\'un autre téléphone) au moment de l\'appairage et quand on change les blocages. Une fois appliqués, les blocages restent actifs en 4G/5G.\n\nAppairage manuel : mettez Paramètres et Coupe-Net en écran partagé (ou fenêtre flottante), touchez « Associer avec un code » dans les Paramètres, puis recopiez le port (les chiffres après « : ») et le code dans Coupe-Net.</string>
+    <string name="manual_pair_info">Dans Débogage sans fil › « Associer avec un code », recopiez le port (chiffres après les « : ») et le code à 6 chiffres. Gardez la fenêtre des Paramètres ouverte (écran partagé).</string>
+    <string name="manual_pair_port">Port (ex. 37123), facultatif</string>
+    <string name="manual_pair_code">Code à 6 chiffres</string>
+    <string name="manual_pair_missing">Entrez le code d\'association.</string>
+
+    <string name="pair_searching">Recherche du service d\'appairage… Ouvrez Débogage sans fil › « Associer avec un code ».</string>
+    <string name="pair_found">Service d\'appairage trouvé : entrez le code dans la notification.</string>
+    <string name="pair_no_port">Service d\'appairage introuvable. Touchez « Associer avec un code » dans Débogage sans fil (ou saisissez le port à la main).</string>
+    <string name="pair_in_progress">Appairage en cours…</string>
+    <string name="pair_success">✅ Appairage réussi. Coupe-Net peut maintenant couper internet aux applications.</string>
+    <string name="pair_wrong_code">❌ Code incorrect. Recommencez « Associer avec un code » pour obtenir un nouveau code.</string>
+    <string name="pair_failed">❌ L\'appairage a échoué : %1$s</string>
+    <string name="pair_success_title">Appairage réussi</string>
+    <string name="pair_success_long">Coupe-Net est appairé et s\'est donné le droit d\'allumer le Débogage sans fil lui-même.\n\nVous pouvez éteindre le Débogage sans fil : Coupe-Net le rallume quelques secondes quand il en a besoin (en Wi-Fi), puis le rééteint.\n\nActivez maintenant l\'interrupteur des applications à couper.</string>
+
+    <!-- Liste -->
     <string name="search_hint">Rechercher une application…</string>
     <string name="counter">%1$d application(s) bloquée(s)</string>
     <string name="state_blocked">🚫 Internet coupé · %1$s</string>
     <string name="toggle_desc">Couper internet</string>
 
+    <!-- Menu -->
     <string name="menu_system">Afficher les apps système</string>
     <string name="menu_reapply">Réappliquer les blocages</string>
     <string name="menu_unblock_all">Tout débloquer</string>
+    <string name="menu_auto_disable">Rééteindre le Débogage sans fil après usage</string>
+    <string name="menu_fallback">VPN de secours si le pare-feu ne peut pas être remis</string>
+    <string name="menu_repair">Refaire l\'appairage</string>
     <string name="menu_help">Aide</string>
     <string name="confirm_unblock_all">Rendre internet à toutes les applications bloquées ?</string>
 
+    <!-- Messages -->
     <string name="toast_blocked">Internet coupé pour %1$s</string>
     <string name="toast_unblocked">Internet rétabli pour %1$s</string>
-    <string name="toast_reapplied">Blocages réappliqués</string>
-    <string name="toast_no_backend">Démarrez Shizuku et autorisez Coupe-Net d\'abord.</string>
+    <string name="toast_reapplied">Blocages appliqués</string>
+    <string name="toast_applying">Application des blocages…</string>
+    <string name="toast_busy">Patientez, une opération est en cours…</string>
+    <string name="toast_vpn_refused">Sans l\'autorisation VPN, le mode simple ne peut pas bloquer.</string>
+    <string name="toast_notif_needed">Sans notifications, utilisez l\'appairage manuel.</string>
+    <string name="toast_find_wireless">Cherchez « Débogage sans fil » dans la liste.</string>
+    <string name="toast_enable_dev_options">Activez d\'abord les Options pour les développeurs : touchez 7 fois « Numéro de build ».</string>
+    <string name="toast_always_on">Touchez ⚙ à côté de Coupe-Net › « VPN permanent ».</string>
 
+    <string name="err_no_backend">Le pare-feu système n\'est pas prêt : appairez d\'abord Coupe-Net (bouton en haut).</string>
+    <string name="err_unsupported">Ce téléphone ne propose pas le pare-feu par application d\'Android (il faut en général Android 13 ou plus, à jour). Utilisez le mode simple (VPN).</string>
     <string name="error_title">La commande a échoué</string>
-    <string name="error_body">Android a refusé la commande. Votre version d\'Android ne prend peut-être pas en charge ce pare-feu.\n\nDétail : %1$s</string>
+    <string name="error_body">%1$s</string>
 
-    <string name="help_text">Coupe-Net bloque internet application par application grâce au pare-feu intégré d\'Android. Le blocage marche en Wi-Fi, en 4G/5G et même si un VPN est actif.\n\nIl faut l\'application gratuite Shizuku (ou un téléphone rooté) :\n\n1. Installez Shizuku (Play Store ou shizuku.rikka.app).\n2. Activez les Options pour les développeurs : Paramètres › À propos › appuyez 7 fois sur « Numéro de build ».\n3. Dans Options pour les développeurs, activez « Débogage sans fil ».\n4. Ouvrez Shizuku › « Associer » et suivez les instructions (code d\'association).\n5. Dans Shizuku, appuyez sur « Démarrer ».\n6. Revenez ici et appuyez sur « Autoriser Coupe-Net dans Shizuku ».\n\nImportant : Android efface les blocages à chaque redémarrage. Après un redémarrage, relancez Shizuku (étape 5) : Coupe-Net remet alors automatiquement vos blocages. Avec root, c\'est automatique.</string>
+    <!-- Notifications -->
+    <string name="channel_vpn">Blocage actif</string>
+    <string name="channel_alerts">Alertes</string>
+    <string name="channel_pairing">Appairage et pare-feu</string>
+    <string name="notif_vpn_title">Coupe-Net bloque internet</string>
+    <string name="notif_vpn_fallback_title">Coupe-Net : VPN de secours actif</string>
+    <string name="notif_vpn_text">%1$d application(s) sans internet</string>
+    <string name="notif_working">Travail en cours…</string>
+    <string name="notif_restoring">Remise en place des blocages…</string>
+    <string name="notif_pair_title">Appairage Coupe-Net</string>
+    <string name="notif_pair_waiting">Dans Débogage sans fil, touchez « Associer l\'appareil avec un code d\'association ». Le champ pour le code apparaîtra ici.</string>
+    <string name="notif_pair_found">Service d\'appairage trouvé. Touchez « Saisir le code » et tapez le code à 6 chiffres affiché par Android.</string>
+    <string name="notif_pair_enter_code">Saisir le code</string>
+    <string name="notif_pair_code_label">Code à 6 chiffres</string>
+    <string name="notif_restored_title">Pare-feu rétabli</string>
+    <string name="notif_restored_text">Les blocages sont de nouveau actifs (Wi-Fi, 4G/5G et VPN).</string>
+    <string name="notif_not_restored_title">Blocages pas encore remis</string>
+    <string name="notif_not_restored_text">%1$s</string>
+    <string name="notif_fallback_on">Le pare-feu n\'a pas pu être remis (pas de Wi-Fi ?). En attendant, un VPN de secours garde les applications bloquées. Il s\'arrêtera seul dès que le pare-feu sera rétabli en Wi-Fi.</string>
+    <string name="notif_revoked_title">Blocage VPN arrêté</string>
+    <string name="notif_revoked_text">Un autre VPN a pris la place de Coupe-Net : les applications ne sont plus bloquées. Pour bloquer en même temps qu\'un VPN, utilisez le mode pare-feu système.</string>
+
+    <string name="help_text">Coupe-Net coupe internet aux applications que vous choisissez, en Wi-Fi comme en 4G/5G.\n\n• Mode simple (VPN local) : rien à configurer. Un VPN local reçoit uniquement le trafic des applications bloquées et le jette. Limite d\'Android : un seul VPN à la fois, donc ce mode s\'arrête si vous lancez un autre VPN.\n\n• Mode pare-feu système : utilise le pare-feu intégré d\'Android, qui coupe l\'application elle-même. Marche en Wi-Fi, 4G/5G, partage de connexion ET avec n\'importe quel VPN. Il faut un appairage unique avec le « Débogage sans fil » (sans Shizuku, sans ordinateur) ou un téléphone rooté. Demande Android 11+, et le pare-feu par application est en général disponible à partir d\'Android 13.\n\nRedémarrage : Android efface les règles du pare-feu. Coupe-Net les remet tout seul au démarrage dès que le téléphone est en Wi-Fi. Sans Wi-Fi, un VPN de secours garde les applications bloquées en attendant.\n\nBon à savoir : une application déjà ouverte peut garder en mémoire ce qu\'elle a chargé, fermez-la et rouvrez-la. Les notifications push passant par les services Google peuvent encore arriver.</string>
 </resources>
