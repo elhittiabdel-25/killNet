@@ -100,6 +100,32 @@ public final class AdbKey {
         return Base64.encodeToString(bb.array(), Base64.NO_WRAP) + " " + name;
     }
 
+    /**
+     * Signature du jeton d'authentification adb : RSA PKCS#1 v1.5 avec l'en-tête
+     * DigestInfo SHA-1, appliqué directement au jeton de 20 octets (comme RSA_sign
+     * avec NID_sha1 dans adb). Calcul fait à la main pour ne dépendre d'aucun
+     * fournisseur de chiffrement.
+     */
+    public byte[] signAdbToken(byte[] token) {
+        byte[] prefix = {0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14};
+        int k = (publicKey.getModulus().bitLength() + 7) / 8;
+        byte[] em = new byte[k];
+        int tLen = prefix.length + token.length;
+        em[0] = 0;
+        em[1] = 1;
+        for (int i = 2; i < k - tLen - 1; i++) em[i] = (byte) 0xff;
+        em[k - tLen - 1] = 0;
+        System.arraycopy(prefix, 0, em, k - tLen, prefix.length);
+        System.arraycopy(token, 0, em, k - token.length, token.length);
+        BigInteger d = ((java.security.interfaces.RSAPrivateKey) privateKey).getPrivateExponent();
+        BigInteger s = new BigInteger(1, em).modPow(d, publicKey.getModulus());
+        byte[] be = s.toByteArray();
+        byte[] out = new byte[k];
+        int copy = Math.min(be.length, k);
+        System.arraycopy(be, be.length - copy, out, k - copy, copy);
+        return out;
+    }
+
     public synchronized SSLContext sslContext() throws Exception {
         if (sslContext != null) return sslContext;
         SSLContext c;

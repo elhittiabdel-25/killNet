@@ -29,6 +29,9 @@ public final class AdbClient implements Closeable {
     private static final int A_CLSE = 0x45534c43;
     private static final int A_WRTE = 0x45545257;
     private static final int A_STLS = 0x534c5453;
+    private static final int AUTH_TOKEN = 1;
+    private static final int AUTH_SIGNATURE = 2;
+    private static final int AUTH_RSAPUBLICKEY = 3;
     private static final int A_VERSION = 0x01000001;
     private static final int A_STLS_VERSION = 0x01000000;
     private static final int MAX_PAYLOAD = 1024 * 1024;
@@ -78,7 +81,7 @@ public final class AdbClient implements Closeable {
                 m = c.read();
             }
             if (m.cmd == A_AUTH) {
-                throw new NotPairedException("adbd demande une autorisation (port non TLS)");
+                m = c.authenticate(ctx, key, m);
             }
             if (m.cmd != A_CNXN) throw new IOException("Réponse adb inattendue");
             return c;
@@ -89,6 +92,60 @@ public final class AdbClient implements Closeable {
             c.close();
             throw e;
         }
+    }
+
+    /**
+     * Authentification « classique » (port TCP 5555, comme en USB) : on signe le
+     * jeton avec notre clé ; si adbd ne la connaît pas encore, on lui envoie la clé
+     * publique et Android affiche « Autoriser le débogage ? » (à accepter une fois
+     * en cochant « Toujours autoriser »).
+     */
+    private Msg authenticate(Context ctx, AdbKey key, Msg m) throws Exception {
+        if (m.arg0 != AUTH_TOKEN) throw new IOException("Authentification adb inattendue");
+        send(A_AUTH, AUTH_SIGNATURE, 0, key.signAdbToken(m.data));
+        Msg r = read();
+        if (r.cmd == A_CNXN) return r;
+        if (r.cmd != A_AUTH) throw new IOException("Réponse adb inattendue");
+        // Clé inconnue : demande d'autorisation à l'écran.
+        com.coupenet.Notifications.authPrompt(ctx);
+        send(A_AUTH, AUTH_RSAPUBLICKEY, 0,
+                (key.adbPublicKey("coupenet@android") + "\u0000").getBytes(StandardCharsets.UTF_8));
+        socket.setSoTimeout(90_000);
+        try {
+            r = read();
+        } catch (java.net.SocketTimeoutException e) {
+            throw new NotPairedException("Autorisation de débogage non acceptée à temps");
+        } finally {
+            com.coupenet.Notifications.cancelAuthPrompt(ctx);
+        }
+        socket.setSoTimeout(15_000);
+        if (r.cmd != A_CNXN) throw new NotPairedException("Autorisation de débogage refusée");
+        return r;
+    }
+
+    /** Ouvre un service adb brut (ex. « tcpip:5555 ») et renvoie sa réponse. */
+    public String service(String name) throws IOException {
+        int localId = nextLocalId++;
+        send(A_OPEN, localId, 0, (name + "\u0000").getBytes(StandardCharsets.UTF_8));
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        int remoteId = 0;
+        try {
+            while (true) {
+                Msg m = read();
+                if (m.cmd == A_OKAY) {
+                    remoteId = m.arg0;
+                } else if (m.cmd == A_WRTE) {
+                    remoteId = m.arg0;
+                    output.write(m.data, 0, m.data.length);
+                    send(A_OKAY, localId, remoteId, new byte[0]);
+                } else if (m.cmd == A_CLSE) {
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            // adbd redémarre souvent avant de fermer proprement : normal pour tcpip.
+        }
+        return output.toString("UTF-8").trim();
     }
 
     /** Exécute une commande shell et renvoie [code de sortie, sortie]. */

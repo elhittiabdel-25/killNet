@@ -50,6 +50,16 @@ public final class AdbManager {
         if (!supported()) throw new Exception("Le Débogage sans fil demande Android 11 ou plus récent.");
         if (!Store.adbPaired(ctx)) throw new AdbClient.NotPairedException("Coupe-Net n'est pas encore appairé.");
 
+        // 1. Port TCP local 5555 (« mode 4G ») : marche sans Wi-Fi, même avec un VPN.
+        if (tcpPortOpen()) {
+            try (AdbClient c = AdbClient.connect(ctx, HOST, TCP_PORT)) {
+                return c.shell(command);
+            } catch (Exception ignored) {
+                // on retombe sur le Débogage sans fil
+            }
+        }
+
+        // 2. Débogage sans fil (Wi-Fi).
         ContentResolver cr = ctx.getContentResolver();
         boolean weEnabled = false;
         boolean canToggle = canToggleWirelessDebugging(ctx);
@@ -69,7 +79,12 @@ public final class AdbManager {
                     if (port <= 0) continue;
                     try (AdbClient c = AdbClient.connect(ctx, HOST, port)) {
                         Store.setAdbPort(ctx, port);
-                        return c.shell(command);
+                        AdbClient.Result r = c.shell(command);
+                        if (Store.tcpMode(ctx) && !tcpPortOpen()) {
+                            // Le port 5555 a disparu (redémarrage) : on le rouvre.
+                            try { c.service("tcpip:" + TCP_PORT); } catch (Exception ignored) {}
+                        }
+                        return r;
                     } catch (AdbClient.NotPairedException e) {
                         throw e;
                     } catch (Exception e) {
@@ -90,6 +105,49 @@ public final class AdbManager {
             if (weEnabled && Store.autoDisableWifiDebug(ctx)) {
                 try { Settings.Global.putInt(cr, ADB_WIFI_ENABLED, 0); } catch (Throwable ignored) {}
             }
+        }
+    }
+
+    public static final int TCP_PORT = 5555;
+
+    /** Le port adb TCP local (mode 4G) est-il ouvert en ce moment ? */
+    public static boolean tcpPortOpen() {
+        try (java.net.Socket s = new java.net.Socket()) {
+            s.connect(new java.net.InetSocketAddress(HOST, TCP_PORT), 400);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Active le « mode 4G » : demande à adbd d'écouter aussi sur le port TCP 5555
+     * (comme « adb tcpip 5555 »). Ce port reste ouvert sans Wi-Fi jusqu'au prochain
+     * redémarrage. À faire une fois en Wi-Fi ; la première fois, Android demande
+     * « Autoriser le débogage ? » : cocher « Toujours autoriser ».
+     */
+    public static String enableTcpMode(Context ctx) throws Exception {
+        ContentResolver cr = ctx.getContentResolver();
+        if (canToggleWirelessDebugging(ctx)) {
+            // Le port TCP n'existe que si le « Débogage USB » est activé.
+            try { Settings.Global.putInt(cr, Settings.Global.ADB_ENABLED, 1); } catch (Throwable ignored) {}
+        }
+        Store.setTcpMode(ctx, true);
+        if (!tcpPortOpen()) {
+            // exec() passe par le Débogage sans fil puis ouvre tcpip:5555 (mode demandé).
+            // persist.adb.tcp.port garderait le port après redémarrage : refusé sur la
+            // plupart des téléphones, on essaie quand même.
+            exec(ctx, "setprop persist.adb.tcp.port " + TCP_PORT + " 2>/dev/null; true");
+        }
+        long end = System.currentTimeMillis() + 15_000;
+        while (!tcpPortOpen() && System.currentTimeMillis() < end) Thread.sleep(500);
+        if (!tcpPortOpen()) {
+            throw new Exception("adbd n'a pas ouvert le port " + TCP_PORT
+                    + ". Vérifiez que « Débogage USB » est activé dans les Options pour les développeurs.");
+        }
+        // Premier contact : déclenche si besoin « Autoriser le débogage ? ».
+        try (AdbClient c = AdbClient.connect(ctx, HOST, TCP_PORT)) {
+            return c.shell("echo ok").output;
         }
     }
 
@@ -125,6 +183,8 @@ public final class AdbManager {
         // Juste après l'appairage, le Débogage sans fil est forcément allumé.
         AdbClient.Result r = exec(ctx, "pm grant " + ctx.getPackageName()
                 + " android.permission.WRITE_SECURE_SETTINGS");
+        // Mode 4G dans la foulée (meilleur effort ; bouton disponible sinon).
+        try { enableTcpMode(ctx); } catch (Exception ignored) {}
         return r.output;
     }
 }

@@ -40,6 +40,26 @@ public final class Notifications {
         try { nm.notify(ID_ALERT, n); } catch (Throwable ignored) {}
     }
 
+    private static final int ID_AUTH = 11;
+
+    /** Android va afficher « Autoriser le débogage ? » : on explique quoi faire. */
+    public static void authPrompt(Context ctx) {
+        NotificationManager nm = ctx.getSystemService(NotificationManager.class);
+        if (nm == null) return;
+        String text = ctx.getString(R.string.notif_auth_text);
+        Notification n = builder(ctx, "pairing", R.string.channel_pairing, NotificationManager.IMPORTANCE_HIGH)
+                .setContentTitle(ctx.getString(R.string.notif_auth_title))
+                .setContentText(text)
+                .setStyle(new Notification.BigTextStyle().bigText(text))
+                .build();
+        try { nm.notify(ID_AUTH, n); } catch (Throwable ignored) {}
+    }
+
+    public static void cancelAuthPrompt(Context ctx) {
+        NotificationManager nm = ctx.getSystemService(NotificationManager.class);
+        if (nm != null) nm.cancel(ID_AUTH);
+    }
+
     public static void firewallRestored(Context ctx) {
         alert(ctx, R.string.notif_restored_title, ctx.getString(R.string.notif_restored_text));
     }

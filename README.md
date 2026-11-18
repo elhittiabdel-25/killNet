@@ -37,6 +37,13 @@ Ou dans Android Studio : *Build › Build APK(s)*.
    Sinon : « Appairer en saisissant port et code ici », avec l'écran partagé.
 6. Activez l'interrupteur des applications à couper.
 
+## Mode 4G (changer les blocages sans Wi-Fi)
+Le Débogage sans fil ne marche qu'en Wi-Fi. Coupe-Net demande donc à adbd d'ouvrir aussi un port local `127.0.0.1:5555` (comme `adb tcpip 5555`), qui reste disponible en 4G/5G, même avec Proton VPN, jusqu'au prochain redémarrage.
+- Activé automatiquement après l'appairage, ou bouton « Activer le mode 4G » (en Wi-Fi).
+- La première fois, Android demande « Autoriser le débogage ? » : cocher « Toujours autoriser », puis Autoriser.
+- Le « Débogage USB » doit rester activé.
+- Après un redémarrage : se reconnecter une fois au Wi-Fi, Coupe-Net remet les blocages et rouvre le mode 4G tout seul.
+
 ## Bon à savoir
 - Une application déjà ouverte peut garder en mémoire ce qu'elle a déjà chargé : fermez-la et rouvrez-la.
 - Les notifications push qui passent par les services Google peuvent encore arriver.

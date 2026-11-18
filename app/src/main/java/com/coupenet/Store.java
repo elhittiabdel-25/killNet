@@ -59,6 +59,9 @@ public final class Store {
     public static boolean autoDisableWifiDebug(Context c) { return prefs(c).getBoolean(KEY_AUTO_DISABLE, true); }
     public static void setAutoDisableWifiDebug(Context c, boolean v) { prefs(c).edit().putBoolean(KEY_AUTO_DISABLE, v).apply(); }
 
+    public static boolean tcpMode(Context c) { return prefs(c).getBoolean("tcp_mode", false); }
+    public static void setTcpMode(Context c, boolean v) { prefs(c).edit().putBoolean("tcp_mode", v).commit(); }
+
     public static boolean vpnFallback(Context c) { return prefs(c).getBoolean(KEY_VPN_FALLBACK, true); }
     public static void setVpnFallback(Context c, boolean v) { prefs(c).edit().putBoolean(KEY_VPN_FALLBACK, v).apply(); }
 }

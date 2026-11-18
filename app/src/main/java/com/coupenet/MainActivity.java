@@ -72,6 +72,7 @@ public class MainActivity extends Activity {
     private Firewall.Backend backend = Firewall.Backend.NONE;
     private boolean pairingMessageShown = false;
     private boolean busy = false;
+    private boolean tcpOpen = false;
 
     static final class AppEntry {
         String pkg;
@@ -231,9 +232,11 @@ public class MainActivity extends Activity {
         }
         worker.execute(() -> {
             final Firewall.Backend b = Firewall.backend(this);
+            final boolean tcp = b == Firewall.Backend.ADB && AdbManager.tcpPortOpen();
             ui.post(() -> {
                 Firewall.Backend previous = backend;
                 backend = b;
+                tcpOpen = tcp;
                 if (Store.systemMode(this)) renderSystemStatus();
                 if (b != Firewall.Backend.NONE && previous == Firewall.Backend.NONE) reapply(false);
             });
@@ -271,7 +274,10 @@ public class MainActivity extends Activity {
             setStatus(getString(R.string.status_old_android), RED);
         } else if (backend == Firewall.Backend.ADB) {
             boolean auto = AdbManager.canToggleWirelessDebugging(this);
-            setStatus(getString(auto ? R.string.status_adb_ok : R.string.status_adb_ok_manual), GREEN);
+            String st = getString(auto ? R.string.status_adb_ok : R.string.status_adb_ok_manual)
+                    + "\n\n" + getString(tcpOpen ? R.string.status_tcp_on : R.string.status_tcp_off);
+            setStatus(st, tcpOpen ? GREEN : YELLOW);
+            if (!tcpOpen) showButton(btn1, R.string.btn_enable_tcp, v -> enableTcp());
             showButton(btn2, R.string.btn_test, v -> reapply(true));
             if (!auto) showButton(btn3, R.string.btn_open_wireless, v -> openWirelessDebugging());
         } else {
@@ -297,6 +303,34 @@ public class MainActivity extends Activity {
         b.setText(text);
         b.setOnClickListener(l);
         b.setVisibility(View.VISIBLE);
+    }
+
+    // ---------- Mode 4G (port adb TCP local) ----------
+
+    private void enableTcp() {
+        if (busy) { toast(getString(R.string.toast_busy)); return; }
+        busy = true;
+        progress.setVisibility(View.VISIBLE);
+        setStatus(getString(R.string.tcp_in_progress), YELLOW);
+        worker.execute(() -> {
+            String err = null;
+            try {
+                AdbManager.enableTcpMode(this);
+            } catch (Exception e) {
+                err = e.getMessage() != null ? e.getMessage() : e.toString();
+            }
+            final String error = err;
+            ui.post(() -> {
+                busy = false;
+                progress.setVisibility(View.GONE);
+                if (error == null) {
+                    showText(R.string.tcp_ok_title, getString(R.string.tcp_ok_text));
+                } else {
+                    showError(error);
+                }
+                refreshStatus();
+            });
+        });
     }
 
     // ---------- Appairage ----------
