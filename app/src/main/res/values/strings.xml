@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Coupe-Net</string>
+
+    <string name="status_checking">Vérification de Shizuku…</string>
+    <string name="status_shizuku_ok">✅ Pare-feu prêt (Shizuku). Activez l\'interrupteur d\'une app pour lui couper internet.</string>
+    <string name="status_root_ok">✅ Pare-feu prêt (root). Activez l\'interrupteur d\'une app pour lui couper internet.</string>
+    <string name="status_need_permission">⚠️ Shizuku est lancé mais Coupe-Net n\'est pas encore autorisé.</string>
+    <string name="status_no_shizuku">❌ Shizuku n\'est pas démarré. Il est nécessaire pour couper internet sans root. Voir « Aide » dans le menu.</string>
+    <string name="btn_grant">Autoriser Coupe-Net dans Shizuku</string>
+    <string name="btn_open_shizuku">Ouvrir / installer Shizuku</string>
+
+    <string name="search_hint">Rechercher une application…</string>
+    <string name="counter">%1$d application(s) bloquée(s)</string>
+    <string name="state_blocked">🚫 Internet coupé · %1$s</string>
+    <string name="toggle_desc">Couper internet</string>
+
+    <string name="menu_system">Afficher les apps système</string>
+    <string name="menu_reapply">Réappliquer les blocages</string>
+    <string name="menu_unblock_all">Tout débloquer</string>
+    <string name="menu_help">Aide</string>
+    <string name="confirm_unblock_all">Rendre internet à toutes les applications bloquées ?</string>
+
+    <string name="toast_blocked">Internet coupé pour %1$s</string>
+    <string name="toast_unblocked">Internet rétabli pour %1$s</string>
+    <string name="toast_reapplied">Blocages réappliqués</string>
+    <string name="toast_no_backend">Démarrez Shizuku et autorisez Coupe-Net d\'abord.</string>
+
+    <string name="error_title">La commande a échoué</string>
+    <string name="error_body">Android a refusé la commande. Votre version d\'Android ne prend peut-être pas en charge ce pare-feu.\n\nDétail : %1$s</string>
+
+    <string name="help_text">Coupe-Net bloque internet application par application grâce au pare-feu intégré d\'Android. Le blocage marche en Wi-Fi, en 4G/5G et même si un VPN est actif.\n\nIl faut l\'application gratuite Shizuku (ou un téléphone rooté) :\n\n1. Installez Shizuku (Play Store ou shizuku.rikka.app).\n2. Activez les Options pour les développeurs : Paramètres › À propos › appuyez 7 fois sur « Numéro de build ».\n3. Dans Options pour les développeurs, activez « Débogage sans fil ».\n4. Ouvrez Shizuku › « Associer » et suivez les instructions (code d\'association).\n5. Dans Shizuku, appuyez sur « Démarrer ».\n6. Revenez ici et appuyez sur « Autoriser Coupe-Net dans Shizuku ».\n\nImportant : Android efface les blocages à chaque redémarrage. Après un redémarrage, relancez Shizuku (étape 5) : Coupe-Net remet alors automatiquement vos blocages. Avec root, c\'est automatique.</string>
+</resources>
